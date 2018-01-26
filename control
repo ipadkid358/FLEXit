@@ -1,9 +1,9 @@
 Package: com.ipadkid.flexit
 Name: FLEXit
-Depends: mobilesubstrate, firmware (>= 8.0), libactivator
+Depends: mobilesubstrate, firmware (>= 8.0)
 Version: 0.0.1
 Architecture: iphoneos-arm
-Description: Open source, easy to maintain, FLEX Activator tool
+Description: Open source, easy to maintain, FLEX show tool. Hold on the status bar to show FLEX toolbar. Confirmed working on iPhone X, iOS 11.1.2
 Maintainer: ipad_kid <ipadkid358@gmail.com>
 Author: Flipboard
 Section: Tweaks
