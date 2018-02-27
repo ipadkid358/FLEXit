@@ -1,4 +1,5 @@
 #import <libactivator/libactivator.h>
+#import <objc/runtime.h>
 #import <notify.h>
 
 #import "Sources/FLEXManager.h"
@@ -11,6 +12,11 @@
 - (SBApplication *)_accessibilityFrontMostApplication;
 @end
 
+@interface SBLockScreenManager : NSObject
++ (instancetype)sharedInstance;
+- (BOOL)isUILocked;
+@end
+
 
 @interface FLEXitListener : NSObject <LAListener>
 @end
@@ -19,8 +25,9 @@
 
 - (void)activator:(LAActivator *)activator receiveEvent:(LAEvent *)event forListenerName:(NSString *)listenerName {
     SBApplication *frontmostApp = [(SpringBoard *)UIApplication.sharedApplication _accessibilityFrontMostApplication];
+    SBLockScreenManager *lockscreenManager = [objc_getClass("SBLockScreenManager") sharedInstance];
     
-    if (frontmostApp) {
+    if (frontmostApp && !lockscreenManager.isUILocked) {
         notify_post([[NSString stringWithFormat:@"com.ipadkid.flexit/%@", frontmostApp.bundleIdentifier] UTF8String]);
     } else {
         [FLEXManager.sharedManager showExplorer];
