@@ -1,6 +1,6 @@
 ## FLEXit
 
-A simple, open source tweak for opening [FLEX](https://github.com/Flipboard/FLEX) by holding on the statusbar. This tweak is better than [FLEXing](https://github.com/NSExceptional/FLEXing) because of the setup proccess for the developer, and the its dependency on libobjcipc and Activator
+A simple, open source tweak for opening [FLEX](https://github.com/Flipboard/FLEX) by pressing both volume buttons at the same time
 
 To compile:
 ```sh

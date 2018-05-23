@@ -1,21 +1,39 @@
 #import "Sources/FLEXManager.h"
 #import "Sources/FLEXWindow.h"
 
-@interface UIStatusBarWindow : UIWindow
-@end
+#import <IOKit/hid/IOHIDEventSystem.h>
+#import <IOKit/hid/IOHIDEventSystemClient.h>
 
-%hook UIStatusBarWindow
+OBJC_EXTERN IOHIDEventSystemClientRef IOHIDEventSystemClientCreate(CFAllocatorRef allocator);
 
-- (instancetype)initWithFrame:(CGRect)frame {
-    self = %orig;
+#define kIOHIDEventUsageVolumeUp 233
+#define kIOHIDEventUsageVolumeDown 234
+
+void ioEventHandler(void *target, void *refcon, IOHIDEventQueueRef queue, IOHIDEventRef event) {
+    static BOOL volumeUpPressed = NO;
+    static BOOL volumeDownPressed = NO;
     
-    [self addGestureRecognizer:[[UILongPressGestureRecognizer alloc] initWithTarget:FLEXManager.sharedManager action:@selector(showExplorer)]];
-    
-    return self;
+    if (IOHIDEventGetType(event) == kIOHIDEventTypeKeyboard) {
+        int keyDown = IOHIDEventGetIntegerValue(event, kIOHIDEventFieldKeyboardDown);
+        int button = IOHIDEventGetIntegerValue(event, kIOHIDEventFieldKeyboardUsage);
+        switch (button) {
+            case kIOHIDEventUsageVolumeUp:
+                volumeUpPressed = keyDown;
+                break;
+            case kIOHIDEventUsageVolumeDown:
+                volumeDownPressed = keyDown;
+                break;
+            default:
+                break;
+        }
+        
+        if (volumeUpPressed && volumeDownPressed) {
+            [FLEXManager.sharedManager showExplorer];
+        }
+    }
 }
 
-%end
-
+// allows FLEX to show on the lockscreen
 %hook UIWindow
 
 - (BOOL)_shouldCreateContextAsSecure {
@@ -23,3 +41,20 @@
 }
 
 %end
+
+// thanks https://github.com/ipadkid358/personal-tweaks/blob/master/Touchr/Tweak.x#L147
+static IOHIDEventSystemClientRef ioHIDClient;
+static CFRunLoopRef ioHIDRunLoopScedule;
+
+%ctor {
+    ioHIDClient = IOHIDEventSystemClientCreate(kCFAllocatorDefault);
+    ioHIDRunLoopScedule = CFRunLoopGetMain();
+    
+    IOHIDEventSystemClientScheduleWithRunLoop(ioHIDClient, ioHIDRunLoopScedule, kCFRunLoopDefaultMode);
+    IOHIDEventSystemClientRegisterEventCallback(ioHIDClient, ioEventHandler, NULL, NULL);
+}
+
+%dtor {
+    IOHIDEventSystemClientUnregisterEventCallback(ioHIDClient);
+    IOHIDEventSystemClientUnscheduleWithRunLoop(ioHIDClient, ioHIDRunLoopScedule, kCFRunLoopDefaultMode);
+}
